@@ -482,10 +482,9 @@ function settingsCreate() {
     + volControl
     + '<br><div id="bPrivacy" class="uButtons uButtonGrey">Privacy</div>'
     + '<div id="bChange" class="uButtons uButtonGrey">webapp changeLog</div>'
-    + '<hr>' //Now for the Support buttons:
+    + '<hr>'
     + appAbout
-    + 'If you find a bug, or have a suggestion, please let me know '
-    + '<button class=uButtons onClick="bug()">Here</a>'
+    + '<hr>'
     + appBugs
     + '</div>'
     ;

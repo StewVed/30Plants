@@ -9,8 +9,7 @@
   GlobalScripts have been merged into one file for this one, with only the bits needed (no sound for example)
 
 TODO:
-# Make sure each plant is unique.
-
+# Ability to add many plants in one go.
 */
 
 var zAppPrefix = '30p'  /* Because localStorage uses the base domain not the exact page! */
@@ -43,10 +42,6 @@ function initContent() {
 function runApp() {
   loadCSS();
   savedToday = (storageLoad('ThisWeek') || 0);
-  if (!savedToday) {
-    // my local dev version deletes when I close the browser because Brave wont allow persistant save local stuff
-    savedToday = '0^*1^*2^*3^*4^*5^*6^*7^*8^*9^*10^*11^*12^*13^*14^*15^*16^*24^*23^*25^*27^*28^*30^*33^*35^*37^*';
-  }
   //load the user's added plants
   savedPlantsLoad();
   // load the master plant list
@@ -568,24 +563,3 @@ function getTotalWidthOfElement(ele) {
   const styles = window.getComputedStyle(ele);
   return parseInt(ele.offsetWidth + Math.ceil(parseFloat(styles.marginLeft)) + Math.ceil(parseFloat(styles.marginRight)));
 }
-
-
-/*
-function toDataURL(url, callback) {
-  var xhr = new XMLHttpRequest();
-  xhr.onload = function() {
-    var reader = new FileReader();
-    reader.onloadend = function() {
-      callback(reader.result);
-    }
-    reader.readAsDataURL(xhr.response);
-  };
-  xhr.open('GET', url);
-  xhr.responseType = 'blob';
-  xhr.send();
-}
-
-toDataURL('https://stewved.github.io/globalscripts/images/StewVed.jpg', function(dataUrl) {
-  console.log('RESULT:', dataUrl)
-})
-*/

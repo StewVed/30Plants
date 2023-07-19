@@ -1,4 +1,4 @@
-var zAppVersion = '30p2023-07-19';
+var zAppVersion = '30p2023-07-19a';
 
 self.addEventListener('install', function(event) {
   event.waitUntil(caches.open(zAppVersion).then(function(cache) {
@@ -15,7 +15,7 @@ self.addEventListener('install', function(event) {
       , './green-grow-plant-17105.svg'
     ])
   }))
-  console.log('calorieWatcher files cached.');
+  console.log('30Plants files cached.');
   // activate without user having to close/open the webapp.
   self.skipWaiting();
 });
@@ -25,7 +25,7 @@ self.addEventListener('fetch', function(event) {
       return cacheResponse || fetch(event.request).then(function(netResponse) {
         return caches.open(zAppVersion).then(function(cache) {
           cache.put(event.request, netResponse.clone());
-          console.log(event.request.url + ' added to calorieWatcher cache.');
+          console.log(event.request.url + ' added to 30Plants cache.');
           return netResponse;
         });
       });
