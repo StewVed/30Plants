@@ -11,8 +11,8 @@ self.addEventListener('install', function(event) {
       , './loader.js'
       , './main.js'
       , './texts.js'
-      , './green-grow-plant-17105.png'
-      , './green-grow-plant-17105.svg'
+      , './favicon.png'
+      , './favicon.svg'
     ])
   }))
   console.log('30Plants files cached.');

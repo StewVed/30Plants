@@ -8,9 +8,9 @@
   "theme_color": "white",
   "background_color": "white",
   "icons": [{
-    "src": "green-grow-plant-17105.svg"
+    "src": "favicon.svg"
   }, {
-    "src": "green-grow-plant-17105.png",
+    "src": "favicon.png",
     "type": "image/png"
   }]
 }
