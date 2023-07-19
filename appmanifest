@@ -1,0 +1,16 @@
+{
+  "name": "30 Plants",
+  "short_name": "30Plants",
+  "description": "A personal and private browser-based app to help manage eating thirty different plants each week for better health",
+  "lang": "en",
+  "orientation": "portrait",
+  "display": "fullscreen",
+  "theme_color": "white",
+  "background_color": "white",
+  "icons": [{
+    "src": "green-grow-plant-17105.svg"
+  }, {
+    "src": "green-grow-plant-17105.png",
+    "type": "image/png"
+  }]
+}
