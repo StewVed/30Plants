@@ -9,7 +9,8 @@
   GlobalScripts have been merged into one file for this one, with only the bits needed (no sound for example)
 
 TODO:
-# Ability to add many plants in one go.
+# Start the list as a single coloumn, then two, three... however many the screen will hold... and then scroll.
+
 */
 
 var zAppPrefix = '30p'  /* Because localStorage uses the base domain not the exact page! */
@@ -30,8 +31,7 @@ function initContent() {
       + ' style="width:7em;font-size:1em;">New&nbsp;Week</button>'
     + '<div id="searchPane" style="overflow:hidden;position:relative;margin:0.5em;">'
         + '<input id="fdsrch" type="search" class="plantButton editEnable" style="z-index:1;position:relative;background:white;margin:0;width:100%;" placeholder="add Plant (search)">'
-        + '<div id="searchPlants" class="letScroll" style="position:absolute"></div>'
-      + '</div>'
+    + '</div>'
     + '<div id="todayPane">'
       + '<div id="todayPaneInner" class="letScroll">'
         + '<div id="todayPanePlants" class="letScroll"></div>'
@@ -44,9 +44,11 @@ function runApp() {
   savedToday = (storageLoad('ThisWeek') || 0);
   //load the user's added plants
   savedPlantsLoad();
-  // load the master plant list
-  todayPopulate();
+  todayLoad();
   countPlants();
+
+  document.getElementById('fdsrch').addEventListener('click', searchFocus, false);
+  document.getElementById('fdsrch').addEventListener('input', plantSearch, false);
 }
 
 
@@ -78,16 +80,12 @@ function plantSearch() {
 
   let regMatch = new RegExp('\\b'+toMatch, 'gi');
 
-  //debugger;
   if (toMatch.length > 0) {
     // list user added plants first, so they are on the top of the list
     for (let x of addedPlantsList) {
-      /*
-      if (regMatch.test(addedPlantsList[x][1])) {
-        searchList.push(addedPlantsList[x]); //copy the entire array entry
+      if (x[1].match(regMatch)) {
+        searchList.push(searchListed(x));
       }
-      */
-      searchList.push(searchListed(x));
     }
     //loop through all plants in the plantsList, and make an array of
     //matching plants
@@ -105,6 +103,10 @@ function plantSearch() {
       searchList.push(searchListed(x));
     }
   }
+
+  //Alphabetise the list:
+  searchList.sort(compareSecondColumn);
+  
   let listOfPlants = '';
 
   if (searchList.length || toMatch.length > 0) {
@@ -123,12 +125,13 @@ function plantSearch() {
         '<div id="f+"'
       + ' class="plantButton uButtonGreen letScroll" style="width:7em;margin:0.5em auto;">'
       + 'Add&nbsp;New&nbsp;Plant</div>'
+    ;
   }
 
   //add the list to the pane.
-  document.getElementById('searchPlants').innerHTML = listOfPlants;
+  document.getElementById('todayPanePlants').innerHTML = listOfPlants;
   //make the list scrollable
-  upSetClass(document.getElementById('searchPlants'));
+  //upSetClass(document.getElementById('searchPlants'));
 }
 
 function searchListed(b) {
@@ -164,28 +167,7 @@ function findPlantFromIndex(num) {
   //if it gets here then the plant was not found!
   debugger;
 }
-/*
-function plantsListClick(targ) {
-  //the index number is the individual number assigned to the plant.
-  //this does not change.
-  let indexNum = parseInt(targ.id.slice(2));
 
-  //Create the add plant dialogue:
-  let zId = indexNum + '_add'; //add the index number here so we know what do add later.
-
-  //add stuff to it...
-  let tmpArry = findPlantFromIndex(indexNum);
-
-  let message =
-    '<p style="margin:4px;font-size:2em;">Add plant to this week&apos;s list</p>'
-    + '<H2>' + tmpArry[1] + ':</h2>'
-    + '<button id="y" class="plantList diaButton uButtonGreen" type="button" style="clear:both;float:left;width:5em;">add</button>'
-    + '<button id="b" class="plantList diaButton uButtonRed" type="button" style="float:right;width:5em;">Cancel</button>'
-  ;
-
-  dialogueMake(zId, message);
-}
-*/
 function savedPlantDialog() {
   let message =
     '<p style="margin:4px;font-size:2em;">Add new plant to list</p>'
@@ -203,6 +185,9 @@ function savedPlantAdd() {
     , b = document.getElementById('afName').value
   ;
 
+  //capitalize the first letter:
+  b = b.charAt(0).toUpperCase() + b.slice(1);
+  
   if (a && b) {
     //later, maybe add checking for this
     addedPlantsList.push([
@@ -210,8 +195,8 @@ function savedPlantAdd() {
       , b /* name of plant (eg "Cucumber") */
     ]);
 
+
     savedPlantsSave();
-    //plantSearch();
     searchBlur();
   }
   else {
@@ -251,35 +236,32 @@ function savedPlantsSave() {
 }
 
 function searchFocus() {
-  //put the searchPane into the todayPane
-  /*
-  document.getElementById('todayPane').insertBefore(
-    document.getElementById('searchPane')
-    , document.getElementById('todayPaneInner')
-  );
-  */
-    document.getElementById('searchPane').style.height =
-    window.innerHeight
-    - document.getElementById('searchPane').offsetTop + 'px';
-
+  if (!document.contains(document.getElementById('dn'))) {
+    // add a button to close the search and go back to the list.
+    let newElement = document.createElement('div');
+    newElement.id = 'dn';
+    newElement.className = 'plantButton uButtonGreen';
+    newElement.style.cssText = 'width:7em;margin:0.5em auto;text-align:center;';
+    newElement.innerText = 'Done';
+    //add it to the plantpane:
+    document.getElementById('searchPane').appendChild(newElement);
+  }
   
   document.getElementById('fdsrch').focus();
-  //hide the plant list panel
-  document.getElementById('todayPaneInner').hidden = 'true';
   mouseClear();
+  plantSearch();
 }
 
-function searchBlur(e) {
-  if (document.getElementById('searchPlants').innerText.length > 0) {
-    // clear the sear bar and it's results
-    document.getElementById('fdsrch').value = '';
-    document.getElementById('searchPlants').innerText = '';
-    document.getElementById('searchPane').style.height = '';
-
-    // Show the plant list panel
-    document.getElementById('todayPaneInner').hidden = '';
-    mouseClear();
+function searchBlur() {
+  // clear the sear bar and it's results
+  document.getElementById('fdsrch').value = '';
+  if (document.contains(document.getElementById('dn'))) {
+    document.getElementById('searchPane').removeChild(document.getElementById('dn'));
   }
+  
+  mouseClear();
+  // repopulate this week's plant list:
+  todayPopulate();
 }
 function todayCheck() {
   //check that the current list of plant is today.
@@ -288,8 +270,7 @@ function todayCheck() {
   //the pastPane.
 }
 
-
-function todayPopulate() {
+function todayLoad() {
   //do similar to plantlist here!
   if (savedToday) {
     let b = savedToday.split(d1) ,c;
@@ -299,9 +280,11 @@ function todayPopulate() {
     }
     */
 
-    // to save space, only save the indexNumof a plant
-    //then find the plant in the plantlist, and populate todatList with
-    //all of the details (ram should never be a problem!)
+    /*
+      to save space, only save the indexNumof a plant
+      then find the plant in the plantlist, and populate todatList with
+      all of the details (ram should never be a problem!)
+    */
 
     for (let x = 0; x < (b.length - 1); x++) {
       c = b[x].split(d2);
@@ -315,6 +298,11 @@ function todayPopulate() {
       ]);
     }
   }
+  
+  todayPopulate();
+}
+
+function todayPopulate() {
 
   let listOfPlants = '';
 
@@ -328,8 +316,10 @@ function todayPopulate() {
        + ' Local Storage to remember your data; No data goes anywhere!</p>'
     }
   } else {
-    // reverse the list so the oldest item is at the bottom.
-    for (let x = todayList.length -1; x >= 0; x--) {
+    //Alphabetise the list:
+    todayList.sort(compareSecondColumn);
+    
+    for (let x in todayList) {
       //add to list.
       listOfPlants +='<div id="tl' + x + '" class="plantList letScroll">'
         + todayList[x][1] + '</div>'
@@ -338,58 +328,34 @@ function todayPopulate() {
   }
 
   document.getElementById('todayPanePlants').innerHTML = listOfPlants;
-
-  document.getElementById('fdsrch').addEventListener('click', searchFocus, false);
-  document.getElementById('fdsrch').addEventListener('click', plantSearch, false);
-  document.getElementById('fdsrch').addEventListener('input', plantSearch, false);
-  //document.getElementById('fdsrch').addEventListener('blur', searchBlur);
+  //reset the scroll of the list:
+  document.getElementById('todayPaneInner').style.top = '0px';
+  
 }
 
 function todayAdd(a) {
-  //add the new plant into today's plant list
-  //a is the plant's individual index number
-  //b is the weight of the plant.
+  // add the new plant into today's plant list
+  // grey out the selected plant, and make it -1
+  let zElem = document.getElementById('fl' + a.toString());
+  zElem.classList.add('zListed');
+  zElem.id = 'fl-1';
 
-  //find the plant from it's indexNum
+  // find the plant from it's indexNum
   let tmpArry = findPlantFromIndex(a);
 
-  //add the plant and it's stuff to todayList
+  // add the plant and it's stuff to todayList
   todayList.push([
      tmpArry[0] /* indexNum */
     ,tmpArry[1] /* plant's name */
   ]);
-  //
-  let x = todayList.length - 1;
-  //Create the added plant entry:
-  let newElement = document.createElement('div');
-  newElement.id = 'tl' + x; //add the index number here so we know what do add later.
-  newElement.className = 'plantList letScroll';
-  //add it to the top of the plantpane: (don't have to worry about null cos tis never empty)
-  document.getElementById('todayPanePlants').insertBefore(
-    newElement, document.getElementById('todayPanePlants').firstChild
-  );
-  //add stuff to the new entry
-  newElement.innerHTML = todayList[x][1];
-
-  if (document.getElementById('localDataNotice')) {
-    document.getElementById('localDataNotice').parentNode.removeChild(
-      document.getElementById('localDataNotice')
-    );
-  }
-  searchBlur();
+ 
   todaySave();
-  
-  //plantSearch();
 }
 
 function todayRemove(a) {
-  //delete the thing!
-  delete todayList[a];
-  //delete the plant from the plant list
-  document.getElementById('tl' + a).parentNode.removeChild(
-    document.getElementById('tl' + a)
-  );
-  //recalculate and save the updated list
+  //delete the thing - use splice now that the length is used!
+  todayList.splice(parseFloat(a),1);
+
   searchBlur();
   todaySave();
 }
@@ -415,8 +381,8 @@ function todaySave() {
 
 function  countPlants() {
   // count how many plants are in the list:
-  let a = document.getElementsByClassName('plantList letScroll').length;
-  document.getElementById('numPlants').innerText = a.toString();
+  // let a = document.getElementById('todayPanePlants').getElementsByClassName('plantList letScroll').length;
+  document.getElementById('numPlants').innerText = todayList.length.toString();
 }
 
 function todaysDate() {
@@ -428,15 +394,93 @@ function todaysDate() {
 function todayNew() {
   //add today's cals left to pastList and pastPane
   //save pastList, and blank then save todayList//, and todayDate
-
   savedToday = null;
   todayList = [];
+  todayPopulate(); //may as well be innerText = ''
   todaySave();
-  todayPopulate();
 }
 
 function todayListClick(targ) {
   if (targ.id === 't+') {
+    //show dialogue to confirm new day.
+    let message =
+        '<H2>Confirm new week</h2>'
+      + '<p>Do you want to begin a new week?'
+      + '</p>'
+      + '<button id="n" class="plantButton diaButton uButtonGreen" type="button" style="clear:both;float:left;">Confirm</button>'
+      + '<button id="b" class="plantButton diaButton uButtonRed" type="button" style="float:right;">Cancel</button>'
+    ;
+
+    dialogueMake('new', message);
+  } else if (targ.id.slice(0, 2) === 'tl') {
+    //the index number is the individual number assigned to the plant.
+    //this does not change.
+    let indexNum = parseInt(targ.id.slice(2));
+
+    //Create the aad plant dialogue:
+    let zId = todayList[indexNum][0] + '_edit_' + indexNum; //add the index number here so we know what do add later.
+
+    let message =
+      '<H2>Edit ' + todayList[indexNum][1] + ':</h2>'
+      + '<button id="b" class="plantButton diaButton uButtonOrange" type="button" style="clear:both;float:left;">Cancel</button>'
+      + '<button id="r" class="plantButton diaButton uButtonRed" type="button" style="float:right;">Remove</button>'
+    ;
+
+    dialogueMake(zId, message);
+  }
+}
+
+function dialogueMouseUp(targ) {
+  //look only for the buttons:
+  if (targ.id === 'y' || targ.id === 'n'
+       || targ.id === 'e' || targ.id === 'a'
+       || targ.id === 'b' || targ.id === 'r' || targ.id === 'c'
+     ) {
+    let zDialog = targ.parentNode; //only ever one element within the dialogue div
+    if (targ.id === 'y') {
+      //add to today's list, also recalculating today's calories
+      todayAdd(
+          parseInt(zDialog.id)
+        , parseFloat(document.getElementById('addAmount').value)
+      );
+    } else if (targ.id === 'e') {
+      //edit the seleted plant item's details
+    } else if (targ.id === 'r') {
+      //remove plant from todayPane and todayList
+      todayRemove(zDialog.id.split('_')[2]);
+    } else if (targ.id === 'n') {
+      //New day dialogue confirmed
+      todayNew();
+    } else if (targ.id === 'c') {
+      //New day dialogue confirmed
+      savedPlantAdd();
+    }
+    //no matter the button pressed, close the dialogue:
+    zDialog.parentNode.parentNode.removeChild(zDialog.parentNode);
+  }
+}
+
+function mClick(targ) {
+  let zParentID = ['--','--'];
+  let zParentClass = '';
+
+  if (targ.parentNode) {
+    if (targ.parentNode.id) {
+      zParentID = targ.parentNode.id.split('_');
+    }
+    if (targ.parentNode.parentNode) {
+      if (targ.parentNode.parentNode.className) {
+        zParentClass = targ.parentNode.parentNode.className;
+      }
+    }
+  }
+
+  if (targ.id.slice(0, 2) === 'fl' || targ.id.slice(0, 2) === 'fi') {
+    let sf = parseInt(targ.id.slice(2));
+    if (sf !== -1) {
+      todayAdd(sf);
+    }
+  } else if (targ.id === 't+') {
     //show dialogue to confirm new day.
     let message =
         '<H2>Confirm new week</h2>'
@@ -463,70 +507,12 @@ function todayListClick(targ) {
     ;
 
     dialogueMake(zId, message);
-  }
-}
-
-function dialogueMouseUp(targ) {
-  //look only for the buttons:
-  if (targ.id === 'y' || targ.id === 'n'
-       || targ.id === 'e' || targ.id === 'a'
-       || targ.id === 'b' || targ.id === 'r' || targ.id === 'c'
-     ) {
-    let zDialog = targ.parentNode; //only ever one element within the dialogue div
-    if (targ.id === 'y') {
-      //add to today's list, also recalculating today's calories
-      todayAdd(
-          parseInt(zDialog.id)
-        , parseFloat(document.getElementById('addAmount').value)
-      );
-    } else if (targ.id === 'e') {
-      //edit the seleted plant item's details
-    } else if (targ.id === 'a') {
-      //edit a list item on today's list
-      todayEdit(
-          zDialog.id.split('_')[2]
-        , parseFloat(document.getElementById('addAmount').value)
-      );
-    } else if (targ.id === 'r') {
-      //remove plant from todayPane and todayList
-      todayRemove(zDialog.id.split('_')[2]);
-    } else if (targ.id === 'n') {
-      //New day dialogue confirmed
-      todayNew();
-    } else if (targ.id === 'c') {
-      //New day dialogue confirmed
-      savedPlantAdd();
-    }
-    //no matter the button pressed, close the dialogue:
-    zDialog.parentNode.parentNode.removeChild(zDialog.parentNode);
-  }
-}
-
-function mClick(targ) {
-  let zParentID = ['--','--'];
-  let zParentClass = '';
-
-  if (targ.parentNode) {
-    if (targ.parentNode.id) {
-      zParentID = targ.parentNode.id.split('_');
-    }
-    if (targ.parentNode.parentNode.className) {
-      zParentClass = targ.parentNode.parentNode.className;
-    }
-  }
-
-  if (targ.id.slice(0, 2) === 'fl' || targ.id.slice(0, 2) === 'fi') {
-    //plantsListClick(targ);
-    let sf = parseInt(targ.id.slice(2));
-    if (sf !== -1) {
-      todayAdd(sf);
-    }
-  } else if (targ.id === 't+' || zParentID[0] == 'todayPaneInner' || zParentID[0] == 'todayPanePlants' || targ.id.slice(0, 2) === 'tl') {
-    todayListClick(targ);
   } else if (zParentClass === 'dialog') {
     dialogueMouseUp(targ);
   } else if (targ.id === 'f+') {
     savedPlantDialog();
+  } else if (targ.id === 'dn') {
+    searchBlur();
   }
 }
 
@@ -543,7 +529,7 @@ function resizeIt() {
   document.getElementById('todayPane').style.height =
     window.innerHeight
     - document.getElementById('todayPane').offsetTop + 'px';
-
+  
   // how wide is the available area?
   let a = document.getElementById('todayPane').offsetWidth;
   // how wide is a single plant list element?
@@ -562,4 +548,21 @@ function resizeIt() {
 function getTotalWidthOfElement(ele) {
   const styles = window.getComputedStyle(ele);
   return parseInt(ele.offsetWidth + Math.ceil(parseFloat(styles.marginLeft)) + Math.ceil(parseFloat(styles.marginRight)));
+}
+
+/* MDN:
+const arr = [3, 1, 4, 1, 5, 9];
+const compareFn = (a, b) => (a > b ? 1 : 0);
+arr.sort(compareFn);
+dosn't work.
+*/
+
+//https://stackoverflow.com/questions/16096872/how-to-sort-2-dimensional-array-by-column-value
+function compareSecondColumn(a, b) {
+    if (a[1] === b[1]) {
+        return 0;
+    }
+    else {
+        return (a[1] < b[1]) ? -1 : 1;
+    }
 }

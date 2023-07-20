@@ -110,7 +110,7 @@ function resize() {
       attempt to keep the entire webapp visible...
       I will assume that document.body.offsetHeight will be correctly reported.
     */
-    var zTop = resizeCenter(document.body.offsetHeight, document.getElementById('cont').offsetHeight);
+    /*var zTop = resizeCenter(document.body.offsetHeight, document.getElementById('cont').offsetHeight);
 
     if (zTop < 0) {
       //make sure that the activeElement is visible.
@@ -121,8 +121,14 @@ function resize() {
         zParentElem = document.activeElement.parentNode;
       }
     }
-
     document.getElementById('cont').style.top = zTop + 'px';
+    */
+
+    // different approach using scrollheight and scrollTo:
+    let zHeight = document.body.offsetHeight - document.body.scrollHeight;
+    if (zHeight < 0) {
+      //document.activeElement.scrollIntoView();
+    }
     return;
   }
 
