@@ -93,6 +93,8 @@ function resizeCenter(a, b) {
 }
 
 function resize() {
+  //regardless of height, always make the width correct:
+  document.body.style.width = window.innerWidth + 'px';
   // call any custom resising code for the app
   resizeEvents();
 
@@ -136,7 +138,7 @@ function resize() {
   //however amount of space is left? what if the available area is square?
   //regardless, let's begin by finding the smallest size out of length and width:
 
-  document.body.style.width = window.innerWidth + 'px';
+  
   document.body.style.height = window.innerHeight + 'px';
 
   if (document.getElementById('cont')) {
@@ -488,9 +490,7 @@ function settingsCreate() {
     + volControl
     + '<br><div id="bPrivacy" class="uButtons uButtonGrey">Privacy</div>'
     + '<div id="bChange" class="uButtons uButtonGrey">webapp changeLog</div>'
-    + '<hr>'
     + appAbout
-    + '<hr>'
     + appBugs
     + '</div>'
     ;
@@ -540,7 +540,11 @@ var imgDummy = ' src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACAQMA
     + 'Stewart Robinson (StewVed) is creating useful, fun, and educational '
     + 'web (HTML5) applications that are Free Open Source Software (FOSS).'
   + '</p>'
+  + '<a href="https://stewved.github.io" target="blank">StewVed\s&nbsp;github&nbsp;website</a>'
+  + ' '
+  + '<a href="https://stewved.co.uk" target="blank">StewVed\'s&nbsp;main&nbsp;website</a>'
 
+  
  ,  appAboutEx =
   '<p style="text-align:justify;">'
     + 'He has been coding since he was about 7 years old, though back '
