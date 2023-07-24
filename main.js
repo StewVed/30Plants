@@ -22,11 +22,11 @@ TODO:
 var zAppPrefix = '30p'  /* Because localStorage uses the base domain not the exact page! */
   , d1 = '^*'           /* hopefully obscure enough that it'll never happen in a string! */
   , d2 = '#*'           /* as above. These are delimiters for seperating data. */
-  , plantsThisWeek
+  , plantsThisWeek /* remove on the 7th of August 2023 */
+  , weekStart = (storageLoad('weekStart') || 0)
   , weekList = []
   , addedPlantsList = []
 ;
-
 
 
 function initContent() {
@@ -34,7 +34,9 @@ function initContent() {
       + '<span style="color:rgb(255, 165, 0);">30</span>'
       + '<span style="color:rgb(0, 0, 205);font-style:italic;"> Plants</span>'
     + '</h1>'
-    + '<h1 style="margin:0.3em 0em 0em 0em;">This week&apos;s plants: <span id="numPlants">00</span></h1>'
+    + '<h1 style="margin:0.3em 0em 0em 0em;">This week&apos;s plants: '
+      + '<span id="numPlants">0</span>&nbsp;in&nbsp;<span id="numDays">0</span>&nbsp;days.'
+    + '</h1>'
     + '<button id="t+" class="plantButton uButtonOrange" type="button"'
       + ' style="width:7em;font-size:1em;">New&nbsp;Week</button>'
     + '<div id="searchPane" style="overflow:hidden;position:relative;margin:0.5em;">'
@@ -49,17 +51,36 @@ function initContent() {
 
 function runApp() {  
   loadCSS();
+  
+  // how long has it been since the start of this week?
+  if (weekStart) {
+    
+    // get the number of ms since 1/1/1970
+    const dateNow = new Date().getTime();
+    
+    // amount of ms in a day
+    const aDay = 86400000;
+
+    // calculate the length of time between now and the week start
+    const tLength = dateNow - weekStart;
+    
+    // how many days since the week start?
+    let nDays = (Math.floor(tLength / aDay));
+    
+    // display the result
+    document.getElementById('numDays').innerText = nDays.toString();
+  }
+
   plantsThisWeek = (storageLoad('ThisWeek') || 0);
-
-  //load the user's added plants
-  savedPlantsLoad();
-
   // >>> just weekLoad() on the 7th of August 2023
   if (plantsThisWeek) {
     if (isFinite(parseInt(plantsThisWeek))) {
-      //looks like an older version - do the old load
+      // looks like an older version - do the old load
       oldWeekLoad();
     } else {
+      // load the user's added plants
+      savedPlantsLoad();
+      // load the saved plants for this week
       weekLoad();
     }
   }
@@ -223,23 +244,12 @@ function savedPlantAdd() {
 }
 
 function savedPlantsLoad() {
-  let savedPlants = storageLoad('SavedPlants');
-
-  if (savedPlants) {
-    let b = savedPlants.split(d1);
-
-    for (let x = 0; x < (b.length - 1); x++) {
-      addedPlantsList.push(b[x]);
-    }
-  }
+  let a = storageLoad('SavedPlants');
+  addedPlantsList = (a ? a.split(d1) : null);
 }
 
 function savedPlantsSave() {
-  let toSave ='';// = todaysDate(); //today's date UTC milliseconds from 1970-01-01
-  for (let x in addedPlantsList) {
-    toSave += addedPlantsList[x] + d1;
-  }
-  storageSave('SavedPlants', toSave);
+  storageSave('SavedPlants', addedPlantsList.join(d1));
 }
 
 function searchFocus() {
@@ -270,22 +280,12 @@ function searchBlur() {
   // repopulate this week's plant list:
   weekListPopulate();
 }
-function todayCheck() {
-  //check that the current list of plant is today.
-  //if not, ask user if there as anything else
-  //then copy the cals for the day, and add to 
-  //the pastPane.
-}
 
 function weekLoad() {
-  //do similar to plantlist here!
-  let b = plantsThisWeek.split(d1);
-
-  for (let x = 0; x < (b.length - 1); x++) {
-    //add the plant and it's stuff to weekList
-    weekList.push(b[x]);
-  }
-
+  a = storageLoad('ThisWeek');
+  // split() is enough now that weekList is 1 dimension.
+  weekList = (a ? a.split(d1) : null);
+  
   weekListPopulate();
 }
 
@@ -444,11 +444,19 @@ function todayRemove(a) {
 }
 
 function weekSave() {
-  let toSave ='';// = todaysDate(); //today's date UTC milliseconds from 1970-01-01
-  // save the plant names.
-  for (let x in weekList) {
-    toSave += weekList[x] + d1;
+  if (!weekStart) {
+    // This is the first time the app has saved / browser cookies reset.
+
+    // get the number of ms since 1970-01-01
+    const dateNow = new Date().getTime();
+
+    // save the number to calculate the length of time in later app launches.
+    storageSave('weekStart', dateNow.toString());
   }
+  
+  // save the plant names. .join() method as weekList is now 1 dimension
+  let toSave = weekList.join(d1);
+  
   storageSave('ThisWeek', toSave);
   countPlants();
 }
@@ -459,19 +467,12 @@ function  countPlants() {
   document.getElementById('numPlants').innerText = weekList.length.toString();
 }
 
-function todaysDate() {
-  let a = new Date();
-  //return today from midnight, so it remains the same until next day.
-  return Date.UTC(a.getUTCFullYear().toString(), a.getUTCMonth().toString(), a.getUTCDate().toString());
-}
-
 function newWeek() {
-  //add today's cals left to pastList and pastPane
-  //save pastList, and blank then save weekList//, and todayDate
-  plantsThisWeek = null;
+  // empty the week list, reset the week start, save, reset display.
   weekList = [];
-  weekListPopulate(); //may as well be innerText = ''
+  weekStart = 0;
   weekSave();
+  document.getElementById('todayPanePlants').innerHTML = '';
 }
 
 function weekListClick(targ) {
@@ -583,7 +584,7 @@ function mClick(targ) {
 function loadCSS() {
   let zCSS = document.createElement('style');
   zCSS.type = 'text/css';
-  zCSS.innerText = '@keyframes Vom{0%{left:0}to{left:75%}}@keyframes popupBouncer{0%{top:100%}60%{top:-25%}to{top:0}}body,input{font-size:1em}body{box-sizing:border-box;overflow:hidden;font-family:sans-serif;margin:0}.plantButton{border:1px solid #000;cursor:pointer;padding:2px 12px;margin:.5em 0;border-radius:1em}.plantList,body,input{text-align:center}.zListed{opacity:33%}#todayPanePlants{margin:auto;}.plantList{box-sizing:border-box;font-family:cursive;margin:.3em;width:12em;display:inline-table}.dialog{z-index:3;text-align:center;position:absolute;width:100%;background:#fff;height:100%;padding:0 .5em;box-sizing:border-box}#titleHead{font-size:2.5em;margin:0;text-shadow:0 0 3px;background:#fff}#todayPane{position:relative;overflow:hidden;margin:0 .5em}#todayPaneInner{position:absolute;width:100%;text-align:left}ul{font-size:.8em;padding-left:1em}.B{font-weight:700}.C{text-align:center}.Re{color:red}.Gr{color:#0f0}.Bl{color:#00f}.Or{color:orange}.ubLink{font-weight:700;text-decoration:underline;transition:opacity .7s;opacity:.7;color:#000}.ubLink:hover{transition:opacity .3s;opacity:1}.uButtons{text-align:center;margin:.3em;padding:.1em .75em;color:#000;border:.1em solid #000;border-radius:5em;display:inline-block;font:inherit}.uButtonDisabled{background:linear-gradient(#ccc,#999);opacity:.5}.uButtonGrey{background:linear-gradient(#e6e6e6,#b3b3b3)}.uButtonGrey:hover{background:linear-gradient(#fff,#ccc)}.uButtonGrey:active{background:linear-gradient(#ccc,#999)}.uButtonGreen{background:linear-gradient(#80ff80,#090)}.uButtonGreen:hover{background:linear-gradient(#b3ffb3,#0c0)}.uButtonGreen:active{background:linear-gradient(#3f3,#060)}.uButtonOrange{background:linear-gradient(#ffe5b3,#c80)}.uButtonOrange:hover{background:linear-gradient(#fff7e5,#fa0)}.uButtonOrange:active{background:linear-gradient(#fc6,#960)}.uButtonRed{background:linear-gradient(#ff8080,#900)}.uButtonRed:hover{background:linear-gradient(#ffb3b3,#c00)}.uButtonRed:active{background:linear-gradient(#f33,#600)}.uButtonLeft{border-radius:5em 0 0 5em;margin-right:0;border-right:0}.uButtonMid,.uButtonRight{margin-left:0;border-left:0}.uButtonMid{border-radius:0;margin-right:0;border-right:0}.uButtonRight{border-radius:0 5em 5em 0}.uB15{width:15%}.fsInner{transform:scale(1.5,1);font-weight:bolder;display:inline-block;line-height:1em;margin-right:.2em}.settB{position:absolute;top:0;padding:.2em .5em .2em .4em;line-height:125%;font-size:125%;background-color:rgba(255,255,255,.5);border-bottom:2px solid #007fff;border-right:2px solid #007fff}#settCont,.settInner{position:absolute;box-sizing:border-box}#settCont{top:0;left:-100%;height:100%;width:100%;background-color:#fff;border-right:4px solid #007fff;transition:left .6s ease-out;text-align:center;z-index:24}.settInner{padding:1.5em .8em;width:inherit}.loadC,.loadPi{position:relative}.loadC{width:90%;margin:2px auto;border-radius:24px;border:2px solid gray;text-align:left}.loadPi{border-radius:inherit;height:24px;width:0%;background:linear-gradient(#cfc,#0c0)}#toastContainer,.loadPc{position:absolute;width:100%}.loadPc{border-radius:inherit;text-align:center;color:gray;font-weight:700;font-size:125%;line-height:24px;top:0}.loadVV{position:relative;float:none;animation:Vom .5s ease-in-out alternate infinite;width:25%;background:radial-gradient(farthest-side at 50% 50%,#0f0,rgba(255,0,0,0))}#toastContainer{bottom:0;box-sizing:border-box;z-index:64}#toastPopup{position:absolute;padding:1.5em;top:0;border-top:4px solid #007fff;animation:popupBouncer .5s ease-in-out;background-color:rgba(255,255,255,.95);background:#fff}.buttonClose{z-index:32;font-weight:700;padding:.05em .3em;font-size:1.5em;position:absolute;top:0;right:0}#toastPopup,#unp,.inputThingy{width:100%;box-sizing:border-box}#unp,.inputThingy{text-align:center}#unp{font-weight:700;overflow:hidden;position:relative;padding-bottom:1em;border-bottom:.2em solid #000;margin-bottom:1em}.inputThingy{clear:both;float:left;margin:0;padding:.2em;border:1px solid #000;border-radius:.3em;font-size:inherit}';
+  zCSS.innerText = '@keyframes Vom{0%{left:0}to{left:75%}}@keyframes popupBouncer{0%{top:100%}60%{top:-25%}to{top:0}}body,input{font-size:1em}body{box-sizing:border-box;overflow:hidden;font-family:sans-serif;margin:0}.plantButton{border:1px solid #000;cursor:pointer;padding:2px 12px;margin:.5em 0;border-radius:1em}.plantList,body,input{text-align:center}.zListed{opacity:33%}#todayPanePlants{margin:auto;}.plantList{box-sizing:border-box;font-family:cursive;font-size:large;margin:.3em;width:12em;display:inline-table}.dialog{z-index:3;text-align:center;position:absolute;width:100%;background:#fff;height:100%;padding:0 .5em;box-sizing:border-box}#titleHead{font-size:2.5em;margin:0;text-shadow:0 0 3px;background:#fff}#todayPane{position:relative;overflow:hidden;margin:0 .5em}#todayPaneInner{position:absolute;width:100%;text-align:left}ul{font-size:.8em;padding-left:1em}.B{font-weight:700}.C{text-align:center}.Re{color:red}.Gr{color:#0f0}.Bl{color:#00f}.Or{color:orange}.ubLink{font-weight:700;text-decoration:underline;transition:opacity .7s;opacity:.7;color:#000}.ubLink:hover{transition:opacity .3s;opacity:1}.uButtons{text-align:center;margin:.3em;padding:.1em .75em;color:#000;border:.1em solid #000;border-radius:5em;display:inline-block;font:inherit}.uButtonDisabled{background:linear-gradient(#ccc,#999);opacity:.5}.uButtonGrey{background:linear-gradient(#e6e6e6,#b3b3b3)}.uButtonGrey:hover{background:linear-gradient(#fff,#ccc)}.uButtonGrey:active{background:linear-gradient(#ccc,#999)}.uButtonGreen{background:linear-gradient(#80ff80,#090)}.uButtonGreen:hover{background:linear-gradient(#b3ffb3,#0c0)}.uButtonGreen:active{background:linear-gradient(#3f3,#060)}.uButtonOrange{background:linear-gradient(#ffe5b3,#c80)}.uButtonOrange:hover{background:linear-gradient(#fff7e5,#fa0)}.uButtonOrange:active{background:linear-gradient(#fc6,#960)}.uButtonRed{background:linear-gradient(#ff8080,#900)}.uButtonRed:hover{background:linear-gradient(#ffb3b3,#c00)}.uButtonRed:active{background:linear-gradient(#f33,#600)}.uButtonLeft{border-radius:5em 0 0 5em;margin-right:0;border-right:0}.uButtonMid,.uButtonRight{margin-left:0;border-left:0}.uButtonMid{border-radius:0;margin-right:0;border-right:0}.uButtonRight{border-radius:0 5em 5em 0}.uB15{width:15%}.fsInner{transform:scale(1.5,1);font-weight:bolder;display:inline-block;line-height:1em;margin-right:.2em}.settB{position:absolute;top:0;padding:.2em .5em .2em .4em;line-height:125%;font-size:125%;background-color:rgba(255,255,255,.5);border-bottom:2px solid #007fff;border-right:2px solid #007fff}#settCont,.settInner{position:absolute;box-sizing:border-box}#settCont{top:0;left:-100%;height:100%;width:100%;background-color:#fff;border-right:4px solid #007fff;transition:left .6s ease-out;text-align:center;z-index:24}.settInner{padding:1.5em .8em;width:inherit}.loadC,.loadPi{position:relative}.loadC{width:90%;margin:2px auto;border-radius:24px;border:2px solid gray;text-align:left}.loadPi{border-radius:inherit;height:24px;width:0%;background:linear-gradient(#cfc,#0c0)}#toastContainer,.loadPc{position:absolute;width:100%}.loadPc{border-radius:inherit;text-align:center;color:gray;font-weight:700;font-size:125%;line-height:24px;top:0}.loadVV{position:relative;float:none;animation:Vom .5s ease-in-out alternate infinite;width:25%;background:radial-gradient(farthest-side at 50% 50%,#0f0,rgba(255,0,0,0))}#toastContainer{bottom:0;box-sizing:border-box;z-index:64}#toastPopup{position:absolute;padding:1.5em;top:0;border-top:4px solid #007fff;animation:popupBouncer .5s ease-in-out;background-color:rgba(255,255,255,.95);background:#fff}.buttonClose{z-index:32;font-weight:700;padding:.05em .3em;font-size:1.5em;position:absolute;top:0;right:0}#toastPopup,#unp,.inputThingy{width:100%;box-sizing:border-box}#unp,.inputThingy{text-align:center}#unp{font-weight:700;overflow:hidden;position:relative;padding-bottom:1em;border-bottom:.2em solid #000;margin-bottom:1em}.inputThingy{clear:both;float:left;margin:0;padding:.2em;border:1px solid #000;border-radius:.3em;font-size:inherit}';
   document.head.appendChild(zCSS);
 }
 

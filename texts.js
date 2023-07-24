@@ -1,7 +1,12 @@
 var appCL =
   'If you find a bug, or have a suggestion, please let me know at '
 + '<a class=ubLink href="https://github.com/StewVed/30Plants/issues" target=_blank>GitHub Issues</a>'
-
++ '<hr>'
++ '<p class="B C">24th July 2023</p> '
++ '<ul><li>' + zNew + '(finally) Added how many days since start of the week.'
++ '</li><li>' + zImp + 'Plant list is a little bigger now - too small on my phone!'
++ '</li><li>' + zDev + 'Save/Load should now be more efficient.'
++ '</li></ul>'
 + '<hr>'
 + '<p class="B C">23rd July 2023</p> '
 + '<ul><li>' + zImp + 'Added loads more plants - should be a fairly good list now :D'
