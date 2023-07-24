@@ -245,7 +245,7 @@ function savedPlantAdd() {
 
 function savedPlantsLoad() {
   let a = storageLoad('SavedPlants');
-  addedPlantsList = (a ? a.split(d1) : null);
+  addedPlantsList = (a ? a.split(d1) : []);
 }
 
 function savedPlantsSave() {
@@ -284,7 +284,7 @@ function searchBlur() {
 function weekLoad() {
   a = storageLoad('ThisWeek');
   // split() is enough now that weekList is 1 dimension.
-  weekList = (a ? a.split(d1) : null);
+  weekList = (a ? a.split(d1) : []);
   
   weekListPopulate();
 }
