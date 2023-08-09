@@ -22,7 +22,6 @@ TODO:
 var zAppPrefix = '30p'  /* Because localStorage uses the base domain not the exact page! */
   , d1 = '^*'           /* hopefully obscure enough that it'll never happen in a string! */
   , d2 = '#*'           /* as above. These are delimiters for seperating data. */
-  , plantsThisWeek /* remove on the 7th of August 2023 */
   , weekStart = (storageLoad('weekStart') || 0)
   , weekList = []
   , addedPlantsList = []
@@ -71,19 +70,10 @@ function runApp() {
     document.getElementById('numDays').innerText = nDays.toString();
   }
 
-  plantsThisWeek = (storageLoad('ThisWeek') || 0);
-  // >>> just weekLoad() on the 7th of August 2023
-  if (plantsThisWeek) {
-    if (isFinite(parseInt(plantsThisWeek))) {
-      // looks like an older version - do the old load
-      oldWeekLoad();
-    } else {
-      // load the user's added plants
-      savedPlantsLoad();
-      // load the saved plants for this week
-      weekLoad();
-    }
-  }
+  // load the user's added plants
+  savedPlantsLoad();
+  // load the saved plants for this week
+  weekLoad();
   
   countPlants();  
   document.getElementById('fdsrch').addEventListener('click', searchFocus, false);
@@ -189,25 +179,6 @@ function searchListed(b) {
   return b;
 }
 
-function findPlantFromIndex(num) {
-  // this can be deleted from the project around the 7th of August 2023
-  if (num >= 1000000) {
-    for (let x in addedPlantsList) {
-      if (addedPlantsList[x][0] == num) {
-        return addedPlantsList[x]; //breaks out of the loop and returns, because no finally.
-      }
-    }
-  }
-  for (let x in plantsList) {
-    if (plantsList[x][0] == num) {
-      return plantsList[x]; //breaks out of the loop and returns, because no finally.
-    }
-  }
-
-  //if it gets here then the plant was not found!
-  debugger;
-}
-
 function savedPlantDialog() {
   let message =
     '<p style="margin:4px;font-size:2em;">Add new plant to list</p>'
@@ -288,78 +259,6 @@ function weekLoad() {
   
   weekListPopulate();
 }
-
-
-
-function oldWeekLoad() {
-  /*
-    older version used Calorie Watcher's index version, but new
-    version just uses the plant since the list should never be more than
-    200 odd plants... hopefully that will never exceed storage's limit!
-
-    This can be removed in something like two week's time.. give any
-    early user ages before assuming any they reset!
-    >>> remove this on the 7th of August 2023
-  */
-  oldSavedPlantsLoad();
-  let b = plantsThisWeek.split(d1) ,c;
-
-  for (let x = 0; x < (b.length - 1); x++) {
-    c = b[x].split(d2);
-    let d = findPlantFromIndex(parseInt(c))
-    // just add the name of it... user goes to new list after week reset.
-    if (parseInt(c) >= 1000000) {
-      weekList.push(d[1]);
-    } else {
-      weekList.push(d[1]);
-    }
-    
-  }
-
-
-  // convert to new style:
-  let tmpArray = [];
-  for (let x of addedPlantsList) {
-    tmpArray.push(x[1]);
-  }
-
-  addedPlantsList = tmpArray;
-
-  // check if any of the custom plants are on the new list:
-  for (let x = 0; x < addedPlantsList.length; x++) {
-    if (plantList.includes(addedPlantsList[x])) {
-      addedPlantsList.splice(x,1);
-      x--;
-    }
-  }
-  
-  //save the new files
-  savedPlantsSave();  
-  weekSave();
-  
-  weekListPopulate();
-  
-}
-function oldSavedPlantsLoad() {
-  // refresh the list.
-  addedPlantsList = [];
-  let savedPlants = storageLoad('SavedPlants');
-
-  if (savedPlants) {
-    let b = savedPlants.split(d1) ,c;
-
-    for (let x = 0; x < (b.length - 1); x++) {
-      c = b[x].split(d2);
-      /* [148, "Coffee"] */
-      addedPlantsList.push([
-          c[0] /* alphabet-based index*/
-        , c[1] /* name of plant */
-      ]);
-    }
-
-  }
-}
-
 
 
 function weekListPopulate() {

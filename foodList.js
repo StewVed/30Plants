@@ -11,65 +11,6 @@
   Users can add more plants as they need.
 */
 
-
-
-var plantsList = [
-  [0, 'Coffee']
-, [1, 'Cacao (Chocolate)']
-, [2, 'Hazelnut']
-, [3, 'Nectarine']
-, [4, 'Sweet potato']
-, [5, 'Beetroot']
-, [6, 'Parsnip']
-, [7, 'Wheat']
-, [8, 'Onion']
-, [9, 'Peppercorn']
-, [10, 'Carrot']
-, [11, 'Cauliflower']
-, [12, 'Brussels sprout']
-, [13, 'Potato']
-, [14, 'Plum']
-, [15, 'Spinach']
-, [16, 'Pistachio']
-, [17, 'Chard']
-, [18, 'Kale']
-, [19, 'Oats']
-, [21, 'Flax']
-, [22, 'Clementine']
-, [23, 'Grape']
-, [24, 'Banana']
-, [25, 'Swede']
-, [26, 'Radish']
-, [27, 'Strawberry']
-, [28, 'Apple']
-, [29, 'Mushrooms']
-, [30, 'Tomato']
-, [31, 'Green bean']
-, [32, 'Garden Pea']
-, [33, 'Cucumber']
-, [34, 'Orange']
-, [35, 'Tea']
-, [36, 'Brazil nut']
-, [37, 'Lettuce']
-, [38, 'Haricot bean']
-, [39, 'Butter bean']
-, [40, 'Cabbage']
-, [41, 'Sweetcorn']
-, [42, 'Popcorn']
-, [43, 'Cashew']
-, [44, 'Peanut']
-, [45, 'Peach']
-, [46, 'Basil']
-, [47, 'Oregano']
-, [48, 'Rosemary']
-, [49, 'Thyme']
-, [50, 'Bay leaf']
-, [51, 'Parsley']
-, [52, 'Coriander']
-];
-
-
-
 var plantList = [
  'Allspice'
 , 'Almond'
@@ -125,7 +66,7 @@ var plantList = [
 , 'Coffee'
 , 'Collard'
 , 'Coriander'
-, 'Corn/Maize'
+, 'Corn / Maize'
 , 'Cranberry'
 , 'Cress'
 , 'Cucumber'
@@ -147,7 +88,7 @@ var plantList = [
 , 'Garlic'
 , 'Ginger'
 , 'Gooseberry'
-, 'Grape'
+, 'Grape / Raisin'
 , 'Grapefruit'
 , 'Guava'
 , 'Haricot bean'
@@ -205,14 +146,14 @@ var plantList = [
 , 'Pinto bean'
 , 'Pistachio'
 , 'Plantain'
-, 'Plum'
+, 'Plum / Prune'
 , 'Poke'
 , 'Pomegranate'
 , 'Popcorn'
 , 'Poppy seed'
 , 'Potato'
-, 'Prune'
 , 'Pumpkin'
+, 'Pumpkin seed'
 , 'Radish'
 , 'Raspberry'
 , 'Rhubarb'
